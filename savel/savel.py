@@ -10,6 +10,8 @@ intents.message_content = True
 
 savel = commands.Bot(intents=intents, command_prefix=".")
 
+total_xp = 0
+
 
 async def get_embed(ctx: discord.Message, title="") -> discord.Embed:
     embed = discord.Embed(title=title, color=discord.Color.from_str("#ffffff"))
@@ -33,16 +35,19 @@ async def on_message(message: discord.Message):
     if message.author == savel.user:
         return
 
-    print(message.author)
-
+    # Beta mode only includes the owner, remove once finished
     if message.author.name != "shadofer":
         return
+
+    global total_xp
+
+    total_xp += 10
 
     await savel.process_commands(message)
 
 
 @savel.remove_command("help")
-@savel.command(description="This!")
+@savel.hybrid_command(description="This!")
 async def help(ctx: discord.Message):
     embed = await get_embed(ctx, "Savel Commands")
 
@@ -54,13 +59,27 @@ async def help(ctx: discord.Message):
     await ctx.channel.send(embed=embed)
 
 
-@savel.command(description="The code behind this bot")
+@savel.hybrid_command(description="The code behind this bot")
 async def code(ctx: discord.Message):
     embed = await get_embed(ctx, "Savel Code")
 
     embed.add_field(
         name="Savel is open-sourced at https://github.com/Shadofer/savel", value="\n"
     )
+
+    await ctx.channel.send(embed=embed)
+
+
+@savel.hybrid_command(description="Shows your level stats")
+async def level(ctx: discord.Message):
+    embed = await get_embed(ctx, title=f"{ctx.author.name}'s level")
+
+    global total_xp
+
+    level = 1
+    xp = (level + 1) * 100
+
+    embed.add_field(name=f"Level: {level}, XP: {total_xp}/{xp}", value="\n")
 
     await ctx.channel.send(embed=embed)
 

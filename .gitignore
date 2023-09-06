@@ -130,3 +130,6 @@ dmypy.json
 
 # other
 .vscode
+
+# Savel generated
+savel-*.json

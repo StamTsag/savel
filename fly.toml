@@ -1,0 +1,15 @@
+# fly.toml app configuration file generated for savel on 2023-09-06T13:26:39+03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "savel"
+primary_region = "cdg"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  auto_start_machines = true
+  auto_stop_machines = false  # prevent automatic suspension
+  min_machines_running = 1  # keep a machine running at all times
+  processes = ["app"]

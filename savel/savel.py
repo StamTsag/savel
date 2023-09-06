@@ -3,12 +3,16 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from os import environ, path
 from json import load, dump
+from time import time
+
 
 load_dotenv()
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+
+start = time()
 
 savel = commands.Bot(intents=intents, command_prefix=".")
 
@@ -155,10 +159,12 @@ async def on_message(message: discord.Message):
                 await savel.process_commands(message)
                 return
 
-        await add_xp(str(message.author.id), message)
+        if not environ.get("SAVEL_DEV"):
+            await add_xp(str(message.author.id), message)
 
     else:
-        await add_xp(str(message.author.id), message)
+        if not environ.get("SAVEL_DEV"):
+            await add_xp(str(message.author.id), message)
 
 
 @savel.remove_command("help")
@@ -184,11 +190,19 @@ async def code(ctx: discord.Message):
 
 
 @savel.hybrid_command(description="Shows your level stats")
-async def level(ctx: discord.Message):
-    embed = await get_embed(ctx, title=f"{ctx.author.name}'s level")
+async def level(ctx: discord.Message, mention: discord.User = None):
+    if mention:
+        if mention.bot:
+            return
+
+    embed = await get_embed(
+        ctx, title=f"{ctx.author.name if not mention else mention.name}'s level"
+    )
+
+    target_id = str(ctx.author.id) if not mention else str(mention.id)
 
     embed.add_field(
-        name=f"Level: {get_level(str(ctx.author.id))}, XP: {get_xp(str(ctx.author.id))}/{get_target_xp(str(ctx.author.id))}",
+        name=f"Level: {get_level(target_id)}, XP: {get_xp(target_id)}/{get_target_xp(target_id)}",
         value="",
     )
 
@@ -217,14 +231,10 @@ async def top(ctx: discord.Message, count: int = 10):
 
     selected_xp = total_xp[:count]
 
-    print(total_xp, total_members)
-
     for xp in selected_xp:
         for member in total_members:
             if get_total_xp(str(member.id)) == xp:
                 selected_members.append(member)
-
-    print(selected_xp, selected_members)
 
     for member in selected_members:
         embed.add_field(
@@ -233,6 +243,28 @@ async def top(ctx: discord.Message, count: int = 10):
         )
 
     await ctx.channel.send(embed=embed)
+
+
+@savel.hybrid_command(description="Measures bot latency")
+async def ping(ctx: discord.Message):
+    await ctx.channel.send(content=f":ping_pong: Latency: {round(savel.latency, 2)}ms")
+
+
+@savel.hybrid_command(description="Displays bot uptime")
+async def uptime(ctx: discord.Message):
+    ms = int(time()) - int(start)
+
+    seconds = (ms) % 60
+    seconds = int(seconds)
+
+    minutes = (ms / (60)) % 60
+    minutes = int(minutes)
+
+    hours = (ms / (60 * 60)) % 24
+
+    await ctx.channel.send(
+        content=f":sunny: Uptime: {str(hours) + ' hours ' if hours >= 1 else ''}{str(minutes) + ' minutes ' if minutes >= 1 else ''}{str(seconds) + ' seconds ' if seconds >= 1 else ''}"
+    )
 
 
 savel.run(environ.get("SAVEL_TOKEN"))

@@ -257,6 +257,7 @@ async def top(ctx: discord.Message, count: int = 10):
 
     total_members = []
     total_xp = []
+    selected_usernames = []
     selected_members = []
     selected_xp = []
 
@@ -279,10 +280,13 @@ async def top(ctx: discord.Message, count: int = 10):
                 selected_members.append(member)
 
     for member in selected_members:
-        embed.add_field(
-            name=member.name,
-            value=f"Level: {get_level(str(member.id))}",
-        )
+        if member.name not in selected_usernames:
+            selected_usernames.append(member.name)
+
+            embed.add_field(
+                name=member.name,
+                value=f"Level: {get_level(str(member.id))}",
+            )
 
     await ctx.channel.send(embed=embed)
 

@@ -13,3 +13,7 @@ primary_region = "cdg"
   auto_stop_machines = false  # prevent automatic suspension
   min_machines_running = 1  # keep a machine running at all times
   processes = ["app"]
+
+[mounts]
+  source="savel"
+  destination="/savel-data"

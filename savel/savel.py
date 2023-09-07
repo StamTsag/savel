@@ -12,12 +12,18 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
+# This equals to bool yes
+use_volume = environ.get("SAVEL_USE_VOLUME", "False") == "True"
+
+owner = environ.get("SAVEL_OWNER")
+
 start = time()
 
 savel = commands.Bot(intents=intents, command_prefix=".")
 
-leveling_file = "savel-levels.json"
-config_file = "savel-conf.json"
+
+leveling_file = f'{"/savel-data/" if use_volume == True else ""}savel-levels.json'
+config_file = f'{"/savel-data/" if use_volume == True else ""}savel-conf.json'
 
 
 def setup_files():
@@ -129,7 +135,10 @@ async def check_level(id: str, message: discord.Message):
 
 
 async def get_embed(ctx: discord.Message, title="") -> discord.Embed:
-    embed = discord.Embed(title=title, color=discord.Color.from_str("#ffffff"))
+    embed = discord.Embed(
+        title=title,
+        color=discord.Color.from_str("#ffffff"),
+    )
 
     embed.set_footer(text=f"Sent for {ctx.author.name} in #{ctx.channel.name}")
 
@@ -159,11 +168,11 @@ async def on_message(message: discord.Message):
                 await savel.process_commands(message)
                 return
 
-        if not environ.get("SAVEL_DEV"):
+        if not environ.get("SAVEL_DEV") == True:
             await add_xp(str(message.author.id), message)
 
     else:
-        if not environ.get("SAVEL_DEV"):
+        if not environ.get("SAVEL_DEV") == True:
             await add_xp(str(message.author.id), message)
 
 
@@ -173,7 +182,8 @@ async def help(ctx: discord.Message):
     embed = await get_embed(ctx, "Savel Commands")
 
     for cmd in savel.commands:
-        embed.add_field(name=f"`{cmd}`: {cmd.description}", value="")
+        if cmd.description != "owner-only":
+            embed.add_field(name=f"`{cmd}`: {cmd.description}", value="")
 
     await ctx.channel.send(embed=embed)
 
@@ -265,6 +275,34 @@ async def uptime(ctx: discord.Message):
     await ctx.channel.send(
         content=f":sunny: Uptime: {str(hours) + ' hours ' if hours >= 1 else ''}{str(minutes) + ' minutes ' if minutes >= 1 else ''}{str(seconds) + ' seconds ' if seconds >= 1 else ''}"
     )
+
+
+@savel.hybrid_command(description="owner-only")
+async def fsnames(ctx: discord.Message):
+    # Must have owner and be equal to it
+    if not owner:
+        return
+
+    if ctx.author.name != owner:
+        return
+
+    await ctx.channel.send(
+        content=f"Leveling: {leveling_file}, Configuration: {config_file}"
+    )
+
+
+@savel.hybrid_command(description="owner-only")
+async def restart(ctx: discord.Message):
+    # Must have owner and be equal to it
+    if not owner:
+        return
+
+    if ctx.author.name != owner:
+        return
+
+    await ctx.channel.send("Bot restarting.")
+
+    exit(1)
 
 
 savel.run(environ.get("SAVEL_TOKEN"))

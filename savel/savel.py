@@ -257,7 +257,11 @@ async def top(ctx: discord.Message, count: int = 10):
 
 @savel.hybrid_command(description="Measures bot latency")
 async def ping(ctx: discord.Message):
-    await ctx.channel.send(content=f":ping_pong: Latency: {round(savel.latency, 2)}ms")
+    embed = await get_embed(ctx)
+
+    embed.add_field(name="Latency", value=f"{round(savel.latency, 2)}ms")
+
+    await ctx.channel.send(embed=embed)
 
 
 @savel.hybrid_command(description="Displays bot uptime")
@@ -272,9 +276,14 @@ async def uptime(ctx: discord.Message):
 
     hours = (ms / (60 * 60)) % 24
 
-    await ctx.channel.send(
-        content=f":sunny: Uptime: {str(hours) + ' hours ' if hours >= 1 else ''}{str(minutes) + ' minutes ' if minutes >= 1 else ''}{str(seconds) + ' seconds ' if seconds >= 1 else ''}"
+    embed = await get_embed(ctx)
+
+    embed.add_field(
+        name="Uptime",
+        value=f"{str(hours) + ' hours ' if hours >= 1 else ''}{str(minutes) + ' minutes ' if minutes >= 1 else ''}{str(seconds) + ' seconds ' if seconds >= 1 else ''}",
     )
+
+    await ctx.channel.send(embed=embed)
 
 
 @savel.hybrid_command(description="owner-only")
@@ -286,9 +295,12 @@ async def fsnames(ctx: discord.Message):
     if ctx.author.name != owner:
         return
 
-    await ctx.channel.send(
-        content=f"Leveling: {leveling_file}, Configuration: {config_file}"
-    )
+    embed = await get_embed(ctx)
+
+    embed.add_field(name="Leveling file", value=leveling_file)
+    embed.add_field(name="Configuration file", value=config_file)
+
+    await ctx.channel.send(embed=embed)
 
 
 @savel.hybrid_command(description="owner-only")
@@ -300,7 +312,11 @@ async def restart(ctx: discord.Message):
     if ctx.author.name != owner:
         return
 
-    await ctx.channel.send("Bot restarting.")
+    embed = await get_embed(ctx)
+
+    embed.add_field(name="Savel restarting...", value="")
+
+    await ctx.channel.send(embed=embed)
 
     exit(1)
 

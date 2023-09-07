@@ -147,6 +147,19 @@ async def get_embed(ctx: discord.Message, title="") -> discord.Embed:
     return embed
 
 
+async def send_error_embed(ctx: discord.Message, msg: str) -> discord.Embed:
+    embed = discord.Embed(
+        title="",
+        color=discord.Color.from_str("#ffffff"),
+    )
+
+    embed.add_field(name="Savel command error", value=msg)
+
+    embed.set_footer(text=f"Sent for {ctx.author.name} in #{ctx.channel.name}")
+
+    await ctx.channel.send(embed=embed)
+
+
 @savel.event
 async def on_ready():
     setup_files()
@@ -186,6 +199,23 @@ async def help(ctx: discord.Message):
     for cmd in savel.commands:
         if cmd.description != "owner-only":
             embed.add_field(name=f"`{cmd}`: {cmd.description}", value="")
+
+    await ctx.channel.send(embed=embed)
+
+
+@savel.hybrid_command(description="Owner commands")
+async def helpowner(ctx: discord.Message):
+    if not owner:
+        return
+
+    if ctx.author.name != owner:
+        return
+
+    embed = await get_embed(ctx, "Savel Owner Commands")
+
+    for cmd in savel.commands:
+        if cmd.description == "owner-only":
+            embed.add_field(name=f"`{cmd}`", value="")
 
     await ctx.channel.send(embed=embed)
 
@@ -330,6 +360,24 @@ async def restart(ctx: discord.Message):
     await ctx.channel.send(embed=embed)
 
     exit(1)
+
+
+@savel.hybrid_command(description="owner-only")
+async def shutdown(ctx: discord.Message):
+    # Must have owner and be equal to it
+    if not owner:
+        return
+
+    if ctx.author.name != owner:
+        return
+
+    embed = await get_embed(ctx)
+
+    embed.add_field(name="Savel shutting down...", value="")
+
+    await ctx.channel.send(embed=embed)
+
+    exit(0)
 
 
 savel.run(environ.get("SAVEL_TOKEN"))

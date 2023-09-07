@@ -310,7 +310,7 @@ async def uptime(ctx: discord.Message):
     minutes = (ms / (60)) % 60
     minutes = int(minutes)
 
-    hours = (ms / (60 * 60)) % 24
+    hours = int((ms / (60 * 60)) % 24)
 
     embed = await get_embed(ctx)
 

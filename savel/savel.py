@@ -5,6 +5,8 @@ from os import environ, path
 from json import load, dump
 from time import time
 
+# Should change manually if updates have been commited
+VERSION = "1.0.0"
 
 load_dotenv()
 
@@ -299,6 +301,15 @@ async def fsnames(ctx: discord.Message):
 
     embed.add_field(name="Leveling file", value=leveling_file)
     embed.add_field(name="Configuration file", value=config_file)
+
+    await ctx.channel.send(embed=embed)
+
+
+@savel.hybrid_command(description="Shows bot version")
+async def version(ctx: discord.Message):
+    embed = await get_embed(ctx)
+
+    embed.add_field(name="Savel version", value=VERSION)
 
     await ctx.channel.send(embed=embed)
 

@@ -338,6 +338,15 @@ async def _8ball(ctx: discord.Message, q: str):
         "Hell nah",
         "Hard to say",
         "Seen",
+        "Waste of time",
+        "Thy is the truth",
+        "Thy is false",
+        "Chances are: no",
+        "Chances are: yes",
+        "Ask me later",
+        "I'm gonna pretend you didnt just ask that",
+        "Who",
+        "Sus",
     ]
 
     choice = choices[randrange(0, len(choices) + 1)]

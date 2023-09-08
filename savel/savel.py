@@ -186,13 +186,14 @@ def set_channel(server: str, channel: str):
             dump(content, f)
 
 
-async def get_embed(ctx: discord.Message, title="") -> discord.Embed:
+async def get_embed(ctx: discord.Message, title="", hide_footer=False) -> discord.Embed:
     embed = discord.Embed(
         title=title,
         color=discord.Color.from_str("#ffffff"),
     )
 
-    embed.set_footer(text=f"Sent for {ctx.author.name} in #{ctx.channel.name}")
+    if not hide_footer:
+        embed.set_footer(text=f"Sent for {ctx.author.name} in #{ctx.channel.name}")
 
     return embed
 
@@ -314,6 +315,34 @@ async def peen(ctx: discord.Message, mention: discord.User = None):
         name=final_peen,
         value=f'{final_peen.count("=") - 1}cm',
     )
+
+    await ctx.channel.send(embed=embed)
+
+
+@savel.hybrid_command(name="8ball", description="Try your luck")
+async def _8ball(ctx: discord.Message, q: str):
+    if not q:
+        await send_error_embed(ctx, "Ask me something bruh")
+        return
+
+    choices = [
+        "Not likely",
+        "I don't care",
+        "No",
+        "Yes",
+        "Hopefully not",
+        "Dont ask me",
+        "Most likely",
+        "Improbable",
+        "Impossible",
+        "Hell nah",
+        "Hard to say",
+        "Seen",
+    ]
+
+    choice = choices[randrange(0, len(choices) + 1)]
+
+    embed = await get_embed(ctx, choice, True)
 
     await ctx.channel.send(embed=embed)
 

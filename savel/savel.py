@@ -49,6 +49,17 @@ def check_entry(id: str):
                 dump(content, f)
 
 
+def check_server_entry(server: str):
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        if not (server in content):
+            content[server] = {"channel": ""}
+
+            with open(config_file, "w") as f:
+                dump(content, f)
+
+
 async def add_xp(id: str, ctx: discord.Message):
     check_entry(id)
 
@@ -131,9 +142,47 @@ async def check_level(id: str, message: discord.Message):
             with open(leveling_file, "w") as f:
                 dump(content, f)
 
-            await message.channel.send(
-                content=f"{message.author.mention} is now level {level}!"
-            )
+            if get_channel(message.guild.id):
+                await savel.get_channel(get_channel(message.guild.id)).send(
+                    content=f"{message.author.mention} is now level {level}!",
+                )
+
+            else:
+                await message.channel.send(
+                    content=f"{message.author.mention} is now level {level}!",
+                )
+
+    check_entry(id)
+
+    with open(leveling_file, "r") as f:
+        content = load(f)
+
+        return content[id]["level"]
+
+
+def get_channel(server: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        return int(content[server]["channel"])
+
+
+def set_channel(server: str, channel: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        content[server] = {"channel": str(channel)}
+
+        with open(config_file, "w") as f:
+            dump(content, f)
 
 
 async def get_embed(ctx: discord.Message, title="") -> discord.Embed:
@@ -382,6 +431,24 @@ async def shutdown(ctx: discord.Message):
     await ctx.channel.send(embed=embed)
 
     exit(0)
+
+
+@savel.hybrid_command(description="owner-only")
+async def channel(ctx: discord.Message, channel_arg: discord.TextChannel):
+    # Must have owner and be equal to it
+    if not owner:
+        return
+
+    if ctx.author.name != owner and not ctx.author.guild_permissions.administrator:
+        return
+
+    set_channel(ctx.guild.id, channel_arg.id)
+
+    embed = await get_embed(ctx)
+
+    embed.add_field(name=f"Savel channel set to {channel_arg.name}", value="")
+
+    await ctx.channel.send(embed=embed)
 
 
 savel.run(environ.get("SAVEL_TOKEN"))

@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from os import environ, path
 from json import load, dump
 from time import time
+from random import randrange
 
 # Should change manually if updates have been commited
 VERSION = "1.0.0"
@@ -246,7 +247,7 @@ async def help(ctx: discord.Message):
     embed = await get_embed(ctx, "Savel Commands")
 
     for cmd in savel.commands:
-        if cmd.description != "owner-only":
+        if cmd.description != "owner-only" and cmd.description != "hidden":
             embed.add_field(name=f"`{cmd}`: {cmd.description}", value="")
 
     await ctx.channel.send(embed=embed)
@@ -269,12 +270,49 @@ async def helpowner(ctx: discord.Message):
     await ctx.channel.send(embed=embed)
 
 
+@savel.hybrid_command(description="Shows the invite link")
+async def invite(ctx: discord.Message):
+    embed = await get_embed(ctx)
+
+    embed.add_field(
+        name="Invite Savel using the link below",
+        value="https://discord.com/api/oauth2/authorize?client_id=1148648338137301002&permissions=10256&scope=bot",
+    )
+
+    await ctx.channel.send(embed=embed)
+
+
 @savel.hybrid_command(description="The code behind this bot")
 async def code(ctx: discord.Message):
     embed = await get_embed(ctx, "Savel Code")
 
     embed.add_field(
         name="Savel is open-sourced at https://github.com/Shadofer/savel", value=""
+    )
+
+    await ctx.channel.send(embed=embed)
+
+
+@savel.hybrid_command(description="Peeeeeen size")
+async def peen(ctx: discord.Message, mention: discord.User = None):
+    if mention:
+        if mention.bot:
+            return
+
+    final_peen = "="
+
+    for i in range(randrange(0, 41)):
+        final_peen += "="
+
+    final_peen += "D"
+
+    embed = await get_embed(
+        ctx, f"{ctx.author.name if not mention else mention.name}'s peen size"
+    )
+
+    embed.add_field(
+        name=final_peen,
+        value=f'{final_peen.count("=") - 1}cm',
     )
 
     await ctx.channel.send(embed=embed)
@@ -371,7 +409,7 @@ async def uptime(ctx: discord.Message):
     await ctx.channel.send(embed=embed)
 
 
-@savel.hybrid_command(description="owner-only")
+@savel.hybrid_command(description="hidden")
 async def fsnames(ctx: discord.Message):
     # Must have owner and be equal to it
     if not owner:
@@ -397,7 +435,7 @@ async def version(ctx: discord.Message):
     await ctx.channel.send(embed=embed)
 
 
-@savel.hybrid_command(description="owner-only")
+@savel.hybrid_command(description="hidden")
 async def restart(ctx: discord.Message):
     # Must have owner and be equal to it
     if not owner:
@@ -415,7 +453,7 @@ async def restart(ctx: discord.Message):
     exit(1)
 
 
-@savel.hybrid_command(description="owner-only")
+@savel.hybrid_command(description="hidden")
 async def shutdown(ctx: discord.Message):
     # Must have owner and be equal to it
     if not owner:

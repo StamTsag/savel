@@ -249,7 +249,7 @@ async def help(ctx: discord.Message):
 
     for cmd in savel.commands:
         if cmd.description != "owner-only" and cmd.description != "hidden":
-            embed.add_field(name=f"`{cmd}`: {cmd.description}", value="")
+            embed.add_field(name=f"`{cmd}`: {cmd.description}", value="", inline=False)
 
     await ctx.channel.send(embed=embed)
 
@@ -266,7 +266,7 @@ async def helpowner(ctx: discord.Message):
 
     for cmd in savel.commands:
         if cmd.description == "owner-only":
-            embed.add_field(name=f"`{cmd}`", value="")
+            embed.add_field(name=f"`{cmd}`", value="", inline=False)
 
     await ctx.channel.send(embed=embed)
 
@@ -438,13 +438,14 @@ async def top(ctx: discord.Message, count: int = 10):
             if get_total_xp(str(member.id)) == xp:
                 selected_members.append(member)
 
-    for member in selected_members:
+    for i, member in enumerate(selected_members):
         if member.name not in selected_usernames:
             selected_usernames.append(member.name)
 
             embed.add_field(
-                name=member.name,
+                name=f"{i + 1}. {member.name}",
                 value=f"Level: {get_level(str(member.id))}",
+                inline=False,
             )
 
     await ctx.channel.send(embed=embed)

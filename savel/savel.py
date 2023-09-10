@@ -294,54 +294,6 @@ async def code(ctx: discord.Message):
     await ctx.channel.send(embed=embed)
 
 
-@savel.hybrid_command(description="Peeeeeen size")
-async def peen(ctx: discord.Message, mention: discord.User = None):
-    if mention:
-        if mention.bot:
-            return
-
-    final_peen = "="
-
-    for i in range(randrange(0, 41)):
-        final_peen += "="
-
-    final_peen += "D"
-
-    embed = await get_embed(
-        ctx, f"{ctx.author.name if not mention else mention.name}'s peen size"
-    )
-
-    embed.add_field(
-        name=final_peen,
-        value=f'{final_peen.count("=") - 1}cm',
-    )
-
-    await ctx.channel.send(embed=embed)
-
-
-@savel.hybrid_command(description="Veeeeeen size")
-async def veen(ctx: discord.Message, mention: discord.User = None):
-    if mention:
-        if mention.bot:
-            return
-
-    final_veen = "V"
-
-    for i in range(randrange(0, 21)):
-        final_veen += "="
-
-    embed = await get_embed(
-        ctx, f"{ctx.author.name if not mention else mention.name}'s veen size"
-    )
-
-    embed.add_field(
-        name=final_veen,
-        value=f'{final_veen.count("=") - 1}cm',
-    )
-
-    await ctx.channel.send(embed=embed)
-
-
 @savel.hybrid_command(name="8ball", description="Try your luck")
 async def _8ball(ctx: discord.Message, q: str):
     if not q:

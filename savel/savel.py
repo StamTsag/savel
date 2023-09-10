@@ -517,11 +517,7 @@ async def restart(ctx: discord.Message):
     if ctx.author.name != owner:
         return
 
-    embed = await get_embed(ctx)
-
-    embed.add_field(name="Savel restarting...", value="")
-
-    await ctx.channel.send(embed=embed)
+    await ctx.channel.send(embed=await get_embed(ctx, "Savel restarting...", True))
 
     exit(1)
 
@@ -535,11 +531,7 @@ async def shutdown(ctx: discord.Message):
     if ctx.author.name != owner:
         return
 
-    embed = await get_embed(ctx)
-
-    embed.add_field(name="Savel shutting down...", value="")
-
-    await ctx.channel.send(embed=embed)
+    await ctx.channel.send(embed=await get_embed(ctx, "Savel shutting down...", True))
 
     exit(0)
 
@@ -555,11 +547,11 @@ async def channel(ctx: discord.Message, channel_arg: discord.TextChannel):
 
     set_channel(ctx.guild.id, channel_arg.id)
 
-    embed = await get_embed(ctx)
-
-    embed.add_field(name=f"Savel channel set to {channel_arg.name}", value="")
-
-    await ctx.channel.send(embed=embed)
+    await ctx.channel.send(
+        embed=await get_embed(
+            ctx, f"Savel leveling logs set to {channel_arg.name}", True
+        )
+    )
 
 
 savel.run(environ.get("SAVEL_TOKEN"))

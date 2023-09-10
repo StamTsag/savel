@@ -55,7 +55,7 @@ def check_server_entry(server: str):
         content = load(f)
 
         if not (server in content):
-            content[server] = {"channel": ""}
+            content[server] = {"channel": "-1", "welcome": "-1", "goodbye": "-1"}
 
             with open(config_file, "w") as f:
                 dump(content, f)
@@ -143,7 +143,7 @@ async def check_level(id: str, message: discord.Message):
             with open(leveling_file, "w") as f:
                 dump(content, f)
 
-            if get_channel(message.guild.id):
+            if get_channel(message.guild.id) != -1:
                 await savel.get_channel(get_channel(message.guild.id)).send(
                     content=f"{message.author.mention} is now level {level}!",
                 )
@@ -180,7 +180,57 @@ def set_channel(server: str, channel: str):
     with open(config_file, "r") as f:
         content = load(f)
 
-        content[server] = {"channel": str(channel)}
+        content[server]["channel"] = str(channel)
+
+        with open(config_file, "w") as f:
+            dump(content, f)
+
+
+def get_welcome(server: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        return int(content[server]["welcome"])
+
+
+def set_welcome(server: str, channel: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        content[server]["welcome"] = str(channel)
+
+        with open(config_file, "w") as f:
+            dump(content, f)
+
+
+def get_goodbye(server: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        return int(content[server]["goodbye"])
+
+
+def set_goodbye(server: str, channel: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        content[server]["goodbye"] = str(channel)
 
         with open(config_file, "w") as f:
             dump(content, f)
@@ -240,6 +290,22 @@ async def on_message(message: discord.Message):
     else:
         if not environ.get("SAVEL_DEV") == True:
             await add_xp(str(message.author.id), message)
+
+
+@savel.event
+async def on_member_join(member: discord.Member):
+    target = get_welcome(member.guild.id)
+
+    if target != -1:
+        await savel.get_channel(target).send(f"{member.mention} has joined!")
+
+
+@savel.event
+async def on_member_remove(member: discord.Member):
+    target = get_goodbye(member.guild.id)
+
+    if target != -1:
+        await savel.get_channel(target).send(f"{member.mention} has left!")
 
 
 @savel.remove_command("help")
@@ -502,6 +568,42 @@ async def channel(ctx: discord.Message, channel_arg: discord.TextChannel):
     await ctx.channel.send(
         embed=await get_embed(
             ctx, f"Savel leveling logs set to {channel_arg.name}", True
+        )
+    )
+
+
+@savel.hybrid_command(description="owner-only")
+async def welcome(ctx: discord.Message, channel_arg: discord.TextChannel):
+    # Must have owner and be equal to it
+    if not owner:
+        return
+
+    if ctx.author.name != owner and not ctx.author.guild_permissions.administrator:
+        return
+
+    set_welcome(ctx.guild.id, channel_arg.id)
+
+    await ctx.channel.send(
+        embed=await get_embed(
+            ctx, f"Savel welcoming logs set to {channel_arg.name}", True
+        )
+    )
+
+
+@savel.hybrid_command(description="owner-only")
+async def goodbye(ctx: discord.Message, channel_arg: discord.TextChannel):
+    # Must have owner and be equal to it
+    if not owner:
+        return
+
+    if ctx.author.name != owner and not ctx.author.guild_permissions.administrator:
+        return
+
+    set_goodbye(ctx.guild.id, channel_arg.id)
+
+    await ctx.channel.send(
+        embed=await get_embed(
+            ctx, f"Savel goodbye logs set to {channel_arg.name}", True
         )
     )
 

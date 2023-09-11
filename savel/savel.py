@@ -55,7 +55,12 @@ def check_server_entry(server: str):
         content = load(f)
 
         if not (server in content):
-            content[server] = {"channel": "-1", "welcome": "-1", "goodbye": "-1"}
+            content[server] = {
+                "channel": "-1",
+                "welcome": "-1",
+                "goodbye": "-1",
+                "shadows": "[]",
+            }
 
             with open(config_file, "w") as f:
                 dump(content, f)
@@ -236,6 +241,55 @@ def set_goodbye(server: str, channel: str):
             dump(content, f)
 
 
+def get_shadows(server: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        if "shadows" in content[server]:
+            return content[server]["shadows"]
+
+        else:
+            return []
+
+
+def add_shadow(server: str, id: str):
+    server = str(server)
+    id = str(id)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        shadows = []
+        removed = False
+
+        if "shadows" in content[server]:
+            shadows = list(content[server]["shadows"])
+
+        if not (id in shadows):
+            shadows.append(id)
+
+            removed = False
+
+        else:
+            shadows.remove(id)
+
+            removed = True
+
+        content[server]["shadows"] = shadows
+
+        # Update shadows key anyway, init
+        with open(config_file, "w") as f:
+            dump(content, f)
+
+            return removed
+
+
 async def get_embed(ctx: discord.Message, title="", hide_footer=False) -> discord.Embed:
     embed = discord.Embed(
         title=title,
@@ -298,6 +352,9 @@ async def on_member_join(member: discord.Member):
 
     if target != -1:
         await savel.get_channel(target).send(f"{member.mention} has joined!")
+
+    if str(member.id) in get_shadows(member.guild.id):
+        await member.ban(reason="User in Savel shadow-bans list")
 
 
 @savel.event
@@ -604,6 +661,24 @@ async def goodbye(ctx: discord.Message, channel_arg: discord.TextChannel):
     await ctx.channel.send(
         embed=await get_embed(
             ctx, f"Savel goodbye logs set to {channel_arg.name}", True
+        )
+    )
+
+
+@savel.hybrid_command(description="owner-only")
+async def shadowban(ctx: discord.Message, id: str):
+    # Must have owner and be equal to it
+    if not owner:
+        return
+
+    if ctx.author.name != owner and not ctx.author.guild_permissions.administrator:
+        return
+
+    removed = add_shadow(ctx.guild.id, id)
+
+    await ctx.channel.send(
+        embed=await get_embed(
+            ctx, f"{'Removed s' if removed else 'S'}hadow-banned user {id}", True
         )
     )
 

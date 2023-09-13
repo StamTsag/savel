@@ -60,6 +60,7 @@ def check_server_entry(server: str):
                 "welcome": "-1",
                 "goodbye": "-1",
                 "shadows": "[]",
+                "autorole": "-1",
             }
 
             with open(config_file, "w") as f:
@@ -241,6 +242,31 @@ def set_goodbye(server: str, channel: str):
             dump(content, f)
 
 
+def get_autorole(server: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        return int(content[server]["autorole"])
+
+
+def set_autorole(server: str, role: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        content[server]["autorole"] = str(role)
+
+        with open(config_file, "w") as f:
+            dump(content, f)
+
+
 def get_shadows(server: str):
     server = str(server)
 
@@ -355,6 +381,10 @@ async def on_member_join(member: discord.Member):
 
     if str(member.id) in get_shadows(member.guild.id):
         await member.ban(reason="User in Savel shadow-bans list")
+
+    else:
+        if get_autorole(member.guild.id) != -1:
+            await member.add_roles(member.guild.get_role(get_autorole(member.guild.id)))
 
 
 @savel.event
@@ -663,6 +693,32 @@ async def goodbye(ctx: discord.Message, channel_arg: discord.TextChannel):
             ctx, f"Savel goodbye logs set to {channel_arg.name}", True
         )
     )
+
+
+@savel.hybrid_command(description="owner-only")
+async def autorole(ctx: discord.Message, role_arg: discord.Role = None):
+    # Must have owner and be equal to it
+    if not owner:
+        return
+
+    if ctx.author.name != owner and not ctx.author.guild_permissions.administrator:
+        return
+
+    if role_arg:
+        set_autorole(ctx.guild.id, role_arg.id)
+
+        await ctx.channel.send(
+            embed=await get_embed(
+                ctx, f"Savel target autorole set to {role_arg.name}", True
+            )
+        )
+
+    else:
+        set_autorole(ctx.guild.id, -1)
+
+        await ctx.channel.send(
+            embed=await get_embed(ctx, f"Savel autorole disabled", True)
+        )
 
 
 @savel.hybrid_command(description="owner-only")

@@ -61,6 +61,7 @@ def check_server_entry(server: str):
                 "goodbye": "-1",
                 "shadows": "[]",
                 "autorole": "-1",
+                "counting": "-1",
             }
 
             with open(config_file, "w") as f:
@@ -267,6 +268,35 @@ def set_autorole(server: str, role: str):
             dump(content, f)
 
 
+def get_counting(server: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        if "counting" in content[server]:
+            return int(content[server]["counting"])
+
+        else:
+            return -1
+
+
+def set_counting(server: str, channel: str):
+    server = str(server)
+
+    check_server_entry(server)
+
+    with open(config_file, "r") as f:
+        content = load(f)
+
+        content[server]["counting"] = str(channel)
+
+        with open(config_file, "w") as f:
+            dump(content, f)
+
+
 def get_shadows(server: str):
     server = str(server)
 
@@ -357,8 +387,25 @@ async def on_message(message: discord.Message):
     if message.author == savel.user or message.author.bot:
         return
 
-    # Commands dont give xp
-    if message.content.startswith("."):
+    # Commands / Counting dont give xp
+    if message.channel.id == get_counting(message.guild.id):
+        if not message.content.isnumeric():
+            await message.delete()
+
+            return
+
+        messages = [message async for message in message.channel.history(limit=2)]
+        target_msg = messages[-1]
+
+        if int(message.content) != int(target_msg.content) + 1:
+            await message.delete()
+
+        else:
+            await message.add_reaction("✅")
+
+        return
+
+    elif message.content.startswith("."):
         for command in savel.all_commands:
             if message.content.find(command) != -1:
                 await savel.process_commands(message)
@@ -692,6 +739,24 @@ async def goodbye(ctx: discord.Message, channel_arg: discord.TextChannel):
         embed=await get_embed(
             ctx, f"Savel goodbye logs set to {channel_arg.name}", True
         )
+    )
+
+
+@savel.hybrid_command(description="owner-only")
+async def counting(ctx: discord.Message, channel_arg: discord.TextChannel):
+    # Must have owner and be equal to it
+    if not owner:
+        return
+
+    if ctx.author.name != owner and not ctx.author.guild_permissions.administrator:
+        return
+
+    set_counting(ctx.guild.id, channel_arg.id)
+
+    await savel.get_channel(channel_arg.id).send("0")
+
+    await ctx.channel.send(
+        embed=await get_embed(ctx, f"Savel counting set to {channel_arg.name}", True)
     )
 
 
